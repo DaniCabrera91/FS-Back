@@ -42,7 +42,6 @@ build/Release
 node_modules/
 package-lock.json
 jspm_packages/
-.prettierrc.json
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
