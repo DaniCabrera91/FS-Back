@@ -51,7 +51,7 @@ const userSchema = new Schema(
       match: [/^\S+@\S+\.\S+$/, 'El correo electrónico no es válido'],
     },
     password: {
-      type: Number,
+      type: String,
       required: [true, 'La contraseña es requerida'],
       minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
     },
