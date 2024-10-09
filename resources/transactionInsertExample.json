@@ -1,0 +1,15 @@
+[
+  {
+    "dni": "12345678A",
+    "type": "Ingreso",
+    "category": "Salario",
+    "amount": 1200,
+    "timestamp": { "$date": "2020-01-01T19:33:24" }
+  },
+  {
+    "dni": "",
+    "category": "",
+    "amount": 0,
+    "timestamp": { "$date": "" }
+  }
+]

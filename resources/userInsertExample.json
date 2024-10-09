@@ -1,0 +1,26 @@
+[
+  {
+    "profile": "buyer_1",
+    "name": "Luis",
+    "surname": "Pérez",
+    "birth_date": "1990-05-15",
+    "dni": "12345678A",
+    "email": "juanperez@example.com",
+    "password": 123456,
+    "city": "Bilbao",
+    "iban": "ES39209592739086938465",
+    "balance": 1500
+  },
+  {
+    "profile": "",
+    "name": "",
+    "surname": "",
+    "birth_date": "",
+    "dni": "",
+    "email": "",
+    "password": 123456,
+    "city": "",
+    "iban": "",
+    "balance": 0
+  }
+]
