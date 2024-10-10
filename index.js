@@ -12,5 +12,6 @@ app.use(express.json())
 dbConnection()
 
 app.use('/test', require('./routes/test'))
+app.use('/users', require('./routes/users'))
 
 app.listen(PORT, () => console.log(`Server started at port ${PORT}`))
