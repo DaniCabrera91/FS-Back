@@ -70,7 +70,7 @@ const userSchema = new Schema(
         message: 'El IBAN no es válido',
       },
     },
-    balance: {
+    assets: {
       type: Number,
       required: [true, 'El saldo es requerido'],
       min: [0, 'El saldo no puede ser negativo'],
