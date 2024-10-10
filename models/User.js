@@ -1,8 +1,7 @@
 const mongoose = require('mongoose')
-const bcrypt = require('bcrypt') // Importa bcrypt para encriptar contraseñas
+const bcrypt = require('bcrypt')
 const Schema = mongoose.Schema
 
-// Definir el esquema del usuario
 const userSchema = new Schema(
   {
     profile: {
@@ -28,7 +27,7 @@ const userSchema = new Schema(
       required: [true, 'La fecha de nacimiento es requerida'],
       validate: {
         validator: function (v) {
-          return v <= new Date() // Asegurarse de que la fecha no sea futura
+          return v <= new Date()
         },
         message: 'La fecha de nacimiento no puede estar en el futuro',
       },
@@ -39,7 +38,7 @@ const userSchema = new Schema(
       unique: true,
       validate: {
         validator: function (v) {
-          return /^[0-9]{8}[A-Za-z]$/.test(v) // Valida el formato del DNI
+          return /^[0-9]{8}[A-Za-z]$/.test(v)
         },
         message: 'El DNI no es válido',
       },
