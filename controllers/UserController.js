@@ -41,6 +41,7 @@ const UserController = {
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
         user: {
+          _id: user._id,
           name: user.name,
           surname: user.surname,
           dni: user.dni.slice(0, 6) + '***',
