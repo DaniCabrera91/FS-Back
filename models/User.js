@@ -63,12 +63,6 @@ const userSchema = new Schema(
       type: String,
       required: [true, 'El IBAN es requerido'],
       unique: true,
-      validate: {
-        validator: function (v) {
-          return /^[A-Z]{2}\d{22}$/.test(v)
-        },
-        message: 'El IBAN no es válido',
-      },
     },
     assets: {
       type: Number,
