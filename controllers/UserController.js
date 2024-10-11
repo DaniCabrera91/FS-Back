@@ -2,6 +2,7 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const User = require('../models/User')
+const Token = require('../models/Token') // Asegúrate de tener este modelo para manejar los tokens.
 
 const UserController = {
   async getAllUsers(req, res) {
@@ -38,6 +39,9 @@ const UserController = {
         },
       )
 
+      // Guardar el token en la base de datos
+      await Token.create({ token }) // Asegúrate de tener el modelo Token.
+
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
         user: {
@@ -53,6 +57,25 @@ const UserController = {
       res
         .status(500)
         .json({ message: 'Error al iniciar sesión', error: error.message })
+    }
+  },
+
+  async logout(req, res) {
+    const token = req.headers.authorization // Obtener el token de los headers
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' })
+    }
+
+    try {
+      await Token.findOneAndDelete({ token })
+
+      res.status(200).json({ message: 'Logout exitoso' })
+    } catch (error) {
+      console.error('Error en logout:', error)
+      res
+        .status(500)
+        .json({ message: 'Error al hacer logout', error: error.message })
     }
   },
 }
