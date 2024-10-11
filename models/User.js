@@ -6,25 +6,25 @@ const userSchema = new Schema(
   {
     profile: {
       type: String,
-      required: [true, 'El perfil es requerido'],
-      minlength: [3, 'El perfil debe tener al menos 3 caracteres'],
-      maxlength: [50, 'El perfil no puede exceder los 50 caracteres'],
+      required: true,
+      minlength: 3,
+      maxlength: 50,
     },
     name: {
       type: String,
-      required: [true, 'El nombre es requerido'],
-      minlength: [2, 'El nombre debe tener al menos 2 caracteres'],
-      maxlength: [50, 'El nombre no puede exceder los 50 caracteres'],
+      required: true,
+      minlength: 2,
+      maxlength: 50,
     },
     surname: {
       type: String,
-      required: [true, 'El apellido es requerido'],
-      minlength: [2, 'El apellido debe tener al menos 2 caracteres'],
-      maxlength: [50, 'El apellido no puede exceder los 50 caracteres'],
+      required: true,
+      minlength: 2,
+      maxlength: 50,
     },
     birth_date: {
       type: Date,
-      required: [true, 'La fecha de nacimiento es requerida'],
+      required: true,
       validate: {
         validator: function (v) {
           return v <= new Date()
@@ -34,7 +34,7 @@ const userSchema = new Schema(
     },
     dni: {
       type: String,
-      required: [true, 'El DNI es requerido'],
+      required: true,
       unique: true,
       validate: {
         validator: function (v) {
@@ -45,29 +45,32 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: [true, 'El correo electrónico es requerido'],
+      required: true,
       unique: true,
       match: [/^\S+@\S+\.\S+$/, 'El correo electrónico no es válido'],
     },
     password: {
       type: String,
-      required: [true, 'La contraseña es requerida'],
-      minlength: [6, 'La contraseña debe tener al menos 6 caracteres'],
+      required: true,
+      minlength: 6,
     },
     city: {
       type: String,
-      required: [true, 'La ciudad es requerida'],
-      minlength: [2, 'La ciudad debe tener al menos 2 caracteres'],
+      required: true,
+      minlength: 2,
     },
     iban: {
       type: String,
-      required: [true, 'El IBAN es requerido'],
+      required: true,
       unique: true,
     },
     assets: {
       type: Number,
-      required: [true, 'El saldo es requerido'],
+      required: true,
       min: [0, 'El saldo no puede ser negativo'],
+    },
+    token: {
+      type: String,
     },
   },
   {
@@ -76,16 +79,10 @@ const userSchema = new Schema(
 )
 
 userSchema.pre('save', async function (next) {
-  const user = this
-  if (!user.isModified('password')) return next()
-
-  try {
-    const salt = await bcrypt.genSalt(10)
-    user.password = await bcrypt.hash(user.password, salt)
-    next()
-  } catch (err) {
-    next(err)
-  }
+  if (!this.isModified('password')) return next()
+  const salt = await bcrypt.genSalt(10)
+  this.password = await bcrypt.hash(this.password, salt)
+  next()
 })
 
 userSchema.methods.comparePassword = async function (candidatePassword) {

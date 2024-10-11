@@ -2,7 +2,6 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const User = require('../models/User')
-const Token = require('../models/Token') // Asegúrate de tener este modelo para manejar los tokens.
 
 const UserController = {
   async getAllUsers(req, res) {
@@ -34,13 +33,11 @@ const UserController = {
       const token = jwt.sign(
         { _id: user._id },
         process.env.REACT_APP_JWT_SECRET,
-        {
-          expiresIn: '1h',
-        },
+        { expiresIn: '1h' },
       )
 
-      // Guardar el token en la base de datos
-      await Token.create({ token }) // Asegúrate de tener el modelo Token.
+      user.token = token
+      await user.save()
 
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
@@ -61,14 +58,21 @@ const UserController = {
   },
 
   async logout(req, res) {
-    const token = req.headers.authorization // Obtener el token de los headers
+    const token = req.headers.authorization
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided' })
     }
 
     try {
-      await Token.findOneAndDelete({ token })
+      const user = await User.findOne({ token })
+
+      if (!user) {
+        return res.status(401).json({ message: 'Token inválido' })
+      }
+
+      user.token = null
+      await user.save()
 
       res.status(200).json({ message: 'Logout exitoso' })
     } catch (error) {
