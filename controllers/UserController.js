@@ -58,20 +58,20 @@ const UserController = {
   },
 
   async logout(req, res) {
-    const token = req.headers.authorization
+    const token = req.headers.authorization.split(' ')[1]
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided' })
     }
 
     try {
-      const user = await User.findOne({ token })
+      const user = await User.findOne({ 'tokens.token': token })
 
       if (!user) {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      user.token = null
+      user.tokens = user.tokens.filter((t) => t.token !== token)
       await user.save()
 
       res.status(200).json({ message: 'Logout exitoso' })

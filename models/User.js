@@ -69,9 +69,14 @@ const userSchema = new Schema(
       required: true,
       min: [0, 'El saldo no puede ser negativo'],
     },
-    token: {
-      type: String,
-    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
