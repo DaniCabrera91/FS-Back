@@ -14,13 +14,11 @@ const AdminController = {
         return res.status(400).json({ message: 'Email ya registrado' })
       }
 
-      const saltRounds = 10
-      const hashedPassword = await bcrypt.hash(password, saltRounds)
-
+      // Elimina la encriptación aquí
       const admin = new Admin({
         name,
         email,
-        password: hashedPassword,
+        password, // Aquí solo asignas la contraseña sin encriptar
       })
 
       await admin.save()
@@ -40,41 +38,45 @@ const AdminController = {
     const { email, password } = req.body
 
     try {
+      console.log('Intento de inicio de sesión con el email:', email)
+
       const admin = await Admin.findOne({ email })
 
       if (!admin) {
+        console.log('Administrador no encontrado')
         return res
           .status(404)
           .json({ message: 'Email o contraseña incorrectos' })
       }
 
+      console.log('Administrador encontrado, verificando contraseña')
       const isMatch = await bcrypt.compare(password, admin.password)
 
       if (!isMatch) {
+        console.log('La contraseña no coincide')
         return res
           .status(401)
           .json({ message: 'Email o contraseña incorrectos' })
       }
 
+      console.log('La contraseña coincide, generando token')
       const token = jwt.sign(
         { _id: admin._id },
         process.env.REACT_APP_JWT_SECRET,
-        {
-          expiresIn: '1h',
-        },
+        { expiresIn: '1h' },
       )
 
-      admin.token = token // Guardar el token en el admin
+      admin.token = token // Solo si almacenas un solo token, considera usar un array si permites múltiples sesiones
       await admin.save()
 
+      console.log('Inicio de sesión exitoso, respondiendo con el token')
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
-        token,
         admin: {
           _id: admin._id,
           name: admin.name,
-          email: admin.email,
         },
+        token,
       })
     } catch (error) {
       console.error('Error en el inicio de sesión:', error)
