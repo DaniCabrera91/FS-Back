@@ -5,7 +5,7 @@ const TransController = require('../controllers/TransController')
 router.get('/getAllTransactions', TransController.getAllTransactions)
 router.post('/createTransaction', TransController.createTransaction)
 router.get('/getTransById/id/:_id', TransController.getTransById)
-router.get('/updateTransById/:_id', TransController.updateTransById)
+router.put('/updateTransById/:_id', TransController.updateTransById)
 router.delete('/deleteTransById/:_id', TransController.deleteTransById)
 
 // FILTER TRANSACTIONS BY TYPE
