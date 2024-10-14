@@ -110,15 +110,45 @@ const TransController = {
     }
   },
 
+  // async getTransactionsByUserDni(req, res) {
+  //   const { dni } = req.params
+
+  //   try {
+  //     const user = await User.findOne({ dni })
+  //     if (!user) {
+  //       return res.status(404).send({ message: 'Usuario no encontrado' })
+  //     }
+  //     const transactions = await Transaction.find({ userId: user._id })
+  //     const groupedTransactions = Object.keys(categories).map((key) => {
+  //       return {
+  //         [key]: {
+  //           name: categories[key].name,
+  //           transactions: transactions.filter((transaction) =>
+  //             categories[key].items.includes(transaction.category),
+  //           ),
+  //         },
+  //       }
+  //     })
+
+  //     res.send({ categories: groupedTransactions })
+  //   } catch (error) {
+  //     console.error(error)
+  //     res
+  //       .status(500)
+  //       .send({ message: 'Error al obtener las transacciones', error })
+  //   }
+  // },
   async getTransactionsByUserDni(req, res) {
-    const { dni } = req.params
+    const { dni } = req.body
 
     try {
       const user = await User.findOne({ dni })
       if (!user) {
         return res.status(404).send({ message: 'Usuario no encontrado' })
       }
+
       const transactions = await Transaction.find({ userId: user._id })
+
       const groupedTransactions = Object.keys(categories).map((key) => {
         return {
           [key]: {
