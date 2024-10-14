@@ -14,11 +14,13 @@ const AdminController = {
         return res.status(400).json({ message: 'Email ya registrado' })
       }
 
-      // Elimina la encriptación aquí
+      const salt = await bcrypt.genSalt(10)
+      const hashedPassword = await bcrypt.hash(password, salt)
+
       const admin = new Admin({
         name,
         email,
-        password, // Aquí solo asignas la contraseña sin encriptar
+        password: hashedPassword, // Encriptar la contraseña
       })
 
       await admin.save()
@@ -38,38 +40,33 @@ const AdminController = {
     const { email, password } = req.body
 
     try {
-      console.log('Intento de inicio de sesión con el email:', email)
-
       const admin = await Admin.findOne({ email })
 
       if (!admin) {
-        console.log('Administrador no encontrado')
         return res
           .status(404)
           .json({ message: 'Email o contraseña incorrectos' })
       }
 
-      console.log('Administrador encontrado, verificando contraseña')
       const isMatch = await bcrypt.compare(password, admin.password)
 
       if (!isMatch) {
-        console.log('La contraseña no coincide')
+        console.error('La contraseña no coincide')
         return res
           .status(401)
           .json({ message: 'Email o contraseña incorrectos' })
       }
 
-      console.log('La contraseña coincide, generando token')
       const token = jwt.sign(
         { _id: admin._id },
         process.env.REACT_APP_JWT_SECRET,
         { expiresIn: '1h' },
       )
 
-      admin.token = token // Solo si almacenas un solo token, considera usar un array si permites múltiples sesiones
+      admin.token = token // Solo si almacenas un solo token
       await admin.save()
 
-      console.log('Inicio de sesión exitoso, respondiendo con el token')
+      console.log('Inicio de sesión exitoso')
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
         admin: {
@@ -113,8 +110,22 @@ const AdminController = {
   },
 
   async createUser(req, res) {
+    const { dni, password, iban, ...otherData } = req.body // Asegúrate de capturar dni y iban
+
     try {
-      const user = new User(req.body)
+      // Verifica si el DNI o el IBAN ya existen
+      const existingUserByDNI = await User.findOne({ dni })
+      if (existingUserByDNI) {
+        return res.status(400).json({ message: 'DNI ya registrado' })
+      }
+
+      const existingUserByIBAN = await User.findOne({ iban })
+      if (existingUserByIBAN) {
+        return res.status(400).json({ message: 'IBAN ya registrado' })
+      }
+
+      // Crear el usuario con los datos proporcionados
+      const user = new User({ dni, password, iban, ...otherData })
       await user.save()
       res.status(201).json({ message: 'Usuario creado con éxito', user })
     } catch (error) {
@@ -136,20 +147,38 @@ const AdminController = {
   },
 
   async updateUser(req, res) {
+    const { userId } = req.params
+    const updateData = req.body
+
     try {
-      const { userId } = req.params
-      const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
-        new: true,
+      // Optional: Check if the request body is empty
+      if (!Object.keys(updateData).length) {
+        return res.status(400).json({ message: 'No data provided for update' })
+      }
+
+      // Verificar si el DNI está en los datos de actualización y normalizar
+      if (updateData.dni) {
+        // Aquí puedes normalizar si decides hacerlo en el futuro
+        updateData.dni = updateData.dni.trim().toUpperCase()
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+        new: true, // Return the updated document
+        runValidators: true, // Validate the update against the model schema
       })
+
       if (!updatedUser) {
         return res.status(404).json({ message: 'Usuario no encontrado' })
       }
+
       res
         .status(200)
         .json({ message: 'Usuario actualizado con éxito', updatedUser })
     } catch (error) {
       console.error('Error al actualizar usuario:', error)
-      res.status(500).json({ message: 'Error al actualizar usuario' })
+      res
+        .status(500)
+        .json({ message: 'Error al actualizar usuario', error: error.message })
     }
   },
 
@@ -216,10 +245,12 @@ const AdminController = {
       if (!deletedTransaction) {
         return res.status(404).json({ message: 'Transacción no encontrada' })
       }
-      res.status(200).json({
-        message: 'Transacción eliminada con éxito',
-        deletedTransaction,
-      })
+      res
+        .status(200)
+        .json({
+          message: 'Transacción eliminada con éxito',
+          deletedTransaction,
+        })
     } catch (error) {
       console.error('Error al eliminar transacción:', error)
       res.status(500).json({ message: 'Error al eliminar transacción' })

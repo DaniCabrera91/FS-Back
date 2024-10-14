@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const Admin = require('../models/Admin')
 
 const adminAuth = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]
+  const token = req.headers.authorization // Obtiene el token directamente
   if (!token) {
     return res.status(401).send({ message: 'No token provided' })
   }

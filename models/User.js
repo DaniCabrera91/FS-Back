@@ -83,15 +83,29 @@ const userSchema = new Schema(
   },
 )
 
+// Método para encriptar el IBAN y la contraseña al guardar el usuario
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next()
-  const salt = await bcrypt.genSalt(10)
-  this.password = await bcrypt.hash(this.password, salt)
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(10)
+    this.password = await bcrypt.hash(this.password, salt)
+  }
+
+  if (this.isModified('iban')) {
+    const salt = await bcrypt.genSalt(10)
+    this.iban = await bcrypt.hash(this.iban, salt)
+  }
+
   next()
 })
 
+// Método para comparar la contraseña (después de hash)
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password)
+}
+
+// Método para comparar el IBAN (después de hash)
+userSchema.methods.compareIBAN = async function (candidateIBAN) {
+  return await bcrypt.compare(candidateIBAN, this.iban)
 }
 
 const User = mongoose.model('User', userSchema)
