@@ -8,6 +8,9 @@ router.get('/getTransById/id/:_id', TransController.getTransById)
 router.put('/updateTransById/:_id', TransController.updateTransById)
 router.delete('/deleteTransById/:_id', TransController.deleteTransById)
 
+router.get('/getAllCategories', TransController.getAllCategories)
+router.get('/getByUserDni/:dni', TransController.getTransactionsByUserDni)
+
 // FILTER TRANSACTIONS BY TYPE
 // GET (monthly summary of transactions)
 // GET (monthly summary of transactions) BY CATEGORY

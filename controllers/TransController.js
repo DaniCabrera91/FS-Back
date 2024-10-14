@@ -1,8 +1,9 @@
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
-const User = require('../models/Transaction')
+const User = require('../models/User')
 const Transaction = require('../models/Transaction')
+const categories = require('../utils/categories')
 
 const TransController = {
   // ---
@@ -87,6 +88,54 @@ const TransController = {
       res
         .status(500)
         .send({ message: 'Error al eliminar la transacción', error })
+    }
+  },
+
+  // GET ALL CATEGORIES
+  async getAllCategories(req, res) {
+    try {
+      // Encuentra todas las transacciones y extrae las categorías
+      const transactions = await Transaction.find().select('category')
+
+      // Usar un conjunto para obtener categorías únicas
+      const categories = [
+        ...new Set(transactions.map((transaction) => transaction.category)),
+      ]
+      res.send(categories)
+    } catch (error) {
+      console.error(error)
+      res
+        .status(500)
+        .send({ message: 'Error al obtener las categorías', error })
+    }
+  },
+
+  async getTransactionsByUserDni(req, res) {
+    const { dni } = req.params
+
+    try {
+      const user = await User.findOne({ dni })
+      if (!user) {
+        return res.status(404).send({ message: 'Usuario no encontrado' })
+      }
+      const transactions = await Transaction.find({ userId: user._id })
+      const groupedTransactions = Object.keys(categories).map((key) => {
+        return {
+          [key]: {
+            name: categories[key].name,
+            transactions: transactions.filter((transaction) =>
+              categories[key].items.includes(transaction.category),
+            ),
+          },
+        }
+      })
+
+      res.send({ categories: groupedTransactions })
+    } catch (error) {
+      console.error(error)
+      res
+        .status(500)
+        .send({ message: 'Error al obtener las transacciones', error })
     }
   },
 
