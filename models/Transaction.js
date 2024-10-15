@@ -20,8 +20,14 @@ const TransactionSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: { createdAt: false, updatedAt: true },
+  },
 )
 
 const Transaction = mongoose.model('Transaction', TransactionSchema)

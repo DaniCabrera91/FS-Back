@@ -63,6 +63,10 @@ const importTransactions = async (dniToUserIdMap) => {
 
       if (userId) {
         transaction.userId = userId
+        // Asigna el timestamp a createdAt
+        if (transaction.timestamp) {
+          transaction.createdAt = new Date(transaction.timestamp)
+        }
       } else {
         console.warn(
           `Usuario no encontrado para la transacción con DNI: ${transaction.dni}`,
@@ -71,6 +75,7 @@ const importTransactions = async (dniToUserIdMap) => {
       }
 
       delete transaction.dni
+      delete transaction.timestamp // Eliminamos el timestamp original del JSON, ya que ahora lo usamos como createdAt
       transactionsToInsert.push(transaction)
     }
 
