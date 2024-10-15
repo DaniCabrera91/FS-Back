@@ -112,7 +112,7 @@ const TransController = {
 
   // Obtener todas las transacciones de un usuario por req.body dni
   async getTransactionsByUserDni(req, res) {
-    const { dni } = req.body
+    const { dni, category } = req.body //category es opcional y solo puede ser una, si no se envia categoria, se devolverán todas las transacciones
 
     try {
       const user = await User.findOne({ dni })
@@ -120,49 +120,44 @@ const TransController = {
         return res.status(404).send({ message: 'Usuario no encontrado' })
       }
 
-      const transactions = await Transaction.find({ userId: user._id })
-
-      const groupedTransactions = Object.keys(categories).map((key) => {
-        return {
-          [key]: {
-            name: categories[key].name,
-            transactions: transactions.filter((transaction) =>
-              categories[key].items.includes(transaction.category),
-            ),
-          },
+      if (category) {
+        // Comprobar que la categoría es válida
+        if (!categories[category]) {
+          return res.status(400).send({
+            message:
+              'El usuario no cuenta con transacciones para esa categoría',
+          })
         }
-      })
 
-      res.send({ categories: groupedTransactions })
-    } catch (error) {
-      console.error(error)
-      res
-        .status(500)
-        .send({ message: 'Error al obtener las transacciones', error })
-    }
-  },
+        const filteredTransactions = await Transaction.find({
+          userId: user._id,
+          category: { $in: categories[category].items },
+        }).sort({ createdAt: -1 }) // Ordenar de más reciente a más antiguo
 
-  // Obtener transacciones mensuales de un usuario por req.body dni y fecha o si no se especifica, mes actual
-  async getMonthlyTransactionsByUserDni(req, res) {
-    const { dni, month, year } = req.body
+        // Comprobar si hay transacciones en la categoría especificada
+        if (filteredTransactions.length === 0) {
+          return res.status(404).send({
+            message:
+              'El usuario no cuenta con transacciones para esa categoría',
+          })
+        }
 
-    const currentDate = new Date()
-    const queryMonth = month !== undefined ? month - 1 : currentDate.getMonth()
-    const queryYear = year || currentDate.getFullYear()
-
-    try {
-      const user = await User.findOne({ dni })
-      if (!user) {
-        return res.status(404).send({ message: 'Usuario no encontrado' })
+        return res.send({
+          categories: [
+            {
+              [category]: {
+                name: categories[category].name,
+                transactions: filteredTransactions,
+              },
+            },
+          ],
+        })
       }
 
-      const transactions = await Transaction.find({
-        userId: user._id,
-        createdAt: {
-          $gte: new Date(queryYear, queryMonth, 1),
-          $lt: new Date(queryYear, queryMonth + 1, 1),
-        },
-      })
+      // Si no hay categoría, obtener todas las transacciones
+      const transactions = await Transaction.find({ userId: user._id }).sort({
+        createdAt: -1,
+      }) // También de más reciente a más antigua
 
       const groupedTransactions = Object.keys(categories).reduce(
         (result, key) => {
@@ -178,6 +173,7 @@ const TransController = {
               },
             })
           }
+
           return result
         },
         [],
@@ -191,6 +187,97 @@ const TransController = {
         .send({ message: 'Error al obtener las transacciones', error })
     }
   },
+
+  // Obtener transacciones mensuales de un usuario por req.body dni y categoria y fecha opcionales,
+  // si no se especifica categoría mismo funcionamiento que getTransactionsByUserDni,
+  // si no se especifica fecha, mes y año actual
+  async getMonthlyTransactionsByUserDni(req, res) {
+    const { dni, month, year, category } = req.body // La categoría es opcional
+
+    const currentDate = new Date()
+    const queryMonth = month !== undefined ? month - 1 : currentDate.getMonth()
+    const queryYear = year || currentDate.getFullYear()
+
+    try {
+      const user = await User.findOne({ dni })
+      if (!user) {
+        return res.status(404).send({ message: 'Usuario no encontrado' })
+      }
+
+      if (category) {
+        if (!categories[category]) {
+          return res.status(400).send({
+            message: 'El usuario no cuenta con transacciones en esa categoría',
+          })
+        }
+
+        const filteredTransactions = await Transaction.find({
+          userId: user._id,
+          createdAt: {
+            $gte: new Date(queryYear, queryMonth, 1),
+            $lt: new Date(queryYear, queryMonth + 1, 1),
+          },
+          category: { $in: categories[category].items },
+        }).sort({ createdAt: -1 })
+
+        if (filteredTransactions.length === 0) {
+          return res.status(404).send({
+            message: 'El usuario no cuenta con transacciones en esa categoría',
+          })
+        }
+
+        return res.send({
+          categories: [
+            {
+              [category]: {
+                name: categories[category].name,
+                transactions: filteredTransactions,
+              },
+            },
+          ],
+        })
+      }
+
+      const transactions = await Transaction.find({
+        userId: user._id,
+        createdAt: {
+          $gte: new Date(queryYear, queryMonth, 1),
+          $lt: new Date(queryYear, queryMonth + 1, 1),
+        },
+      }).sort({ createdAt: -1 })
+
+      const groupedTransactions = Object.keys(categories).reduce(
+        (result, key) => {
+          const filteredTransactions = transactions.filter((transaction) =>
+            categories[key].items.includes(transaction.category),
+          )
+
+          if (filteredTransactions.length > 0) {
+            result.push({
+              [key]: {
+                name: categories[key].name,
+                transactions: filteredTransactions,
+              },
+            })
+          }
+
+          return result
+        },
+        [],
+      )
+
+      res.send({ categories: groupedTransactions })
+    } catch (error) {
+      console.error(error)
+      res
+        .status(500)
+        .send({ message: 'Error al obtener las transacciones', error })
+    }
+  },
+
+  // Obtener transacciones mensuales de un usuario por req.body dni y fecha o si no se especifica, mes actual
+
+  // Obtener transacciones de un usuario por req.body dni y categoria
 }
 
 module.exports = TransController
