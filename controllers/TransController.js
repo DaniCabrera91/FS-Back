@@ -274,10 +274,6 @@ const TransController = {
         .send({ message: 'Error al obtener las transacciones', error })
     }
   },
-
-  // Obtener transacciones mensuales de un usuario por req.body dni y fecha o si no se especifica, mes actual
-
-  // Obtener transacciones de un usuario por req.body dni y categoria
 }
 
 module.exports = TransController
