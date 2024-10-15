@@ -17,7 +17,7 @@ const adminSchema = new mongoose.Schema(
       required: true,
     },
     token: {
-      type: String, // O un array de tokens si decides permitir múltiples sesiones
+      type: String,
     },
   },
   {

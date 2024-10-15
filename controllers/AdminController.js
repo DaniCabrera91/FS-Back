@@ -20,7 +20,7 @@ const AdminController = {
       const admin = new Admin({
         name,
         email,
-        password: hashedPassword, // Encriptar la contraseña
+        password: hashedPassword,
       })
 
       await admin.save()
@@ -63,7 +63,7 @@ const AdminController = {
         { expiresIn: '1h' },
       )
 
-      admin.token = token // Solo si almacenas un solo token
+      admin.token = token
       await admin.save()
 
       console.log('Inicio de sesión exitoso')
@@ -84,7 +84,7 @@ const AdminController = {
   },
 
   async logoutAdmin(req, res) {
-    const token = req.headers.authorization?.split(' ')[1] // Obtener el token del encabezado Authorization
+    const token = req.headers.authorization?.split(' ')[1]
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided' })
@@ -97,7 +97,7 @@ const AdminController = {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      admin.token = null // Limpiar el token
+      admin.token = null
       await admin.save()
 
       res.status(200).json({ message: 'Logout exitoso' })
@@ -110,10 +110,9 @@ const AdminController = {
   },
 
   async createUser(req, res) {
-    const { dni, password, iban, ...otherData } = req.body // Asegúrate de capturar dni y iban
+    const { dni, password, iban, ...otherData } = req.body
 
     try {
-      // Verifica si el DNI o el IBAN ya existen
       const existingUserByDNI = await User.findOne({ dni })
       if (existingUserByDNI) {
         return res.status(400).json({ message: 'DNI ya registrado' })
@@ -124,7 +123,6 @@ const AdminController = {
         return res.status(400).json({ message: 'IBAN ya registrado' })
       }
 
-      // Crear el usuario con los datos proporcionados
       const user = new User({ dni, password, iban, ...otherData })
       await user.save()
       res.status(201).json({ message: 'Usuario creado con éxito', user })
@@ -151,20 +149,17 @@ const AdminController = {
     const updateData = req.body
 
     try {
-      // Optional: Check if the request body is empty
       if (!Object.keys(updateData).length) {
         return res.status(400).json({ message: 'No data provided for update' })
       }
 
-      // Verificar si el DNI está en los datos de actualización y normalizar
       if (updateData.dni) {
-        // Aquí puedes normalizar si decides hacerlo en el futuro
         updateData.dni = updateData.dni.trim().toUpperCase()
       }
 
       const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-        new: true, // Return the updated document
-        runValidators: true, // Validate the update against the model schema
+        new: true,
+        runValidators: true,
       })
 
       if (!updatedUser) {
@@ -245,12 +240,10 @@ const AdminController = {
       if (!deletedTransaction) {
         return res.status(404).json({ message: 'Transacción no encontrada' })
       }
-      res
-        .status(200)
-        .json({
-          message: 'Transacción eliminada con éxito',
-          deletedTransaction,
-        })
+      res.status(200).json({
+        message: 'Transacción eliminada con éxito',
+        deletedTransaction,
+      })
     } catch (error) {
       console.error('Error al eliminar transacción:', error)
       res.status(500).json({ message: 'Error al eliminar transacción' })

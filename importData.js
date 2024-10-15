@@ -17,22 +17,20 @@ const importUsers = async () => {
     )
 
     const insertedUsers = []
-    const dniToUserIdMap = new Map() // Mapa para búsqueda rápida
+    const dniToUserIdMap = new Map()
 
     for (const userData of users) {
-      // Verifica el formato del DNI antes de continuar
       if (!/^[0-9]{8}[A-Za-z]$/.test(userData.dni)) {
         console.error(`DNI no válido: ${userData.dni}`)
-        continue // Saltar este usuario si el DNI no es válido
+        continue
       }
 
-      const user = new User(userData) // No hashear el DNI aquí, solo IBAN y contraseña
+      const user = new User(userData)
 
       try {
-        const savedUser = await user.save() // Esto activará el pre('save') y hasheará la contraseña e IBAN
+        const savedUser = await user.save()
         insertedUsers.push(savedUser)
 
-        // Agregar el DNI al mapa para búsqueda rápida
         dniToUserIdMap.set(savedUser.dni, savedUser._id)
       } catch (error) {
         console.error('Error al guardar el usuario:', error)
@@ -44,7 +42,7 @@ const importUsers = async () => {
       insertedUsers.map((user) => ({ dni: user.dni, id: user._id })),
     )
 
-    return { insertedUsers, dniToUserIdMap } // Retornar ambos usuarios y el mapa
+    return { insertedUsers, dniToUserIdMap }
   } catch (error) {
     console.error('Error al importar usuarios:', error)
   }
@@ -61,20 +59,19 @@ const importTransactions = async (dniToUserIdMap) => {
     for (const transaction of transactions) {
       console.log('Verificando transacción:', transaction)
 
-      // Usar el mapa para encontrar rápidamente el ID de usuario basado en el DNI
       const userId = dniToUserIdMap.get(transaction.dni)
 
       if (userId) {
-        transaction.userId = userId // Asignar el ID de usuario encontrado
+        transaction.userId = userId
       } else {
         console.warn(
           `Usuario no encontrado para la transacción con DNI: ${transaction.dni}`,
         )
-        continue // Saltar esta transacción si no se encuentra el usuario
+        continue
       }
 
-      delete transaction.dni // Asegurarse de que el DNI no se almacene
-      transactionsToInsert.push(transaction) // Agregar la transacción al array
+      delete transaction.dni
+      transactionsToInsert.push(transaction)
     }
 
     if (transactionsToInsert.length > 0) {
@@ -94,8 +91,8 @@ const importTransactions = async (dniToUserIdMap) => {
 }
 
 const importData = async () => {
-  const { dniToUserIdMap } = await importUsers() // Desestructurar el objeto retornado
-  await importTransactions(dniToUserIdMap) // Pasar el mapa de DNI a ID
+  const { dniToUserIdMap } = await importUsers()
+  await importTransactions(dniToUserIdMap)
   mongoose.connection.close()
 }
 

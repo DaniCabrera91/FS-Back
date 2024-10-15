@@ -25,7 +25,6 @@ const TestController = {
 
   async createUser(req, res) {
     try {
-      //hay que encriptar la contraseña
       const user = new User(req.body)
       await user.save()
       res.status(201).send({ message: 'Usuario creado con éxito', user })

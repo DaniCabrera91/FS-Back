@@ -36,8 +36,9 @@ const UserController = {
         { expiresIn: '1h' },
       )
 
-      user.token = token
-      await user.save()
+      // Guardar el token como string directamente en el array de tokens
+      user.tokens = user.tokens.concat(token) // Añadir el token como string
+      await user.save() // Guarda el usuario con el nuevo token
 
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
@@ -61,22 +62,23 @@ const UserController = {
     const token = req.headers.authorization.split(' ')[1]
 
     if (!token) {
-      return res.status(401).json({ message: 'No token provided' })
+      return res.status(401).json({ message: 'No se ha proporcionado token' })
     }
 
     try {
-      const user = await User.findOne({ 'tokens.token': token })
+      const user = await User.findOne({ tokens: token }) // Busca el usuario por el token en el array de strings
 
       if (!user) {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      user.tokens = user.tokens.filter((t) => t.token !== token)
-      await user.save()
+      // Filtra el token que se va a eliminar
+      user.tokens = user.tokens.filter((t) => t !== token)
+      await user.save() // Guarda el usuario sin el token removido
 
       res.status(200).json({ message: 'Logout exitoso' })
     } catch (error) {
-      console.error('Error en logout:', error)
+      console.error('Error al hacer logout:', error)
       res
         .status(500)
         .json({ message: 'Error al hacer logout', error: error.message })

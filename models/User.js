@@ -71,10 +71,8 @@ const userSchema = new Schema(
     },
     tokens: [
       {
-        token: {
-          type: String,
-          required: true,
-        },
+        type: String,
+        required: true,
       },
     ],
   },
@@ -83,7 +81,6 @@ const userSchema = new Schema(
   },
 )
 
-// Método para encriptar el IBAN y la contraseña al guardar el usuario
 userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     const salt = await bcrypt.genSalt(10)
@@ -98,12 +95,10 @@ userSchema.pre('save', async function (next) {
   next()
 })
 
-// Método para comparar la contraseña (después de hash)
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password)
 }
 
-// Método para comparar el IBAN (después de hash)
 userSchema.methods.compareIBAN = async function (candidateIBAN) {
   return await bcrypt.compare(candidateIBAN, this.iban)
 }
