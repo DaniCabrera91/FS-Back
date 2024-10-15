@@ -97,7 +97,7 @@ const TransController = {
       // Encuentra todas las transacciones y extrae las categorías
       const transactions = await Transaction.find().select('category')
 
-      // Usar un conjunto para obtener categorías únicas
+      // Se asegura que las categorías no se repitan
       const categories = [
         ...new Set(transactions.map((transaction) => transaction.category)),
       ]
@@ -110,34 +110,7 @@ const TransController = {
     }
   },
 
-  // async getTransactionsByUserDni(req, res) {
-  //   const { dni } = req.params
-
-  //   try {
-  //     const user = await User.findOne({ dni })
-  //     if (!user) {
-  //       return res.status(404).send({ message: 'Usuario no encontrado' })
-  //     }
-  //     const transactions = await Transaction.find({ userId: user._id })
-  //     const groupedTransactions = Object.keys(categories).map((key) => {
-  //       return {
-  //         [key]: {
-  //           name: categories[key].name,
-  //           transactions: transactions.filter((transaction) =>
-  //             categories[key].items.includes(transaction.category),
-  //           ),
-  //         },
-  //       }
-  //     })
-
-  //     res.send({ categories: groupedTransactions })
-  //   } catch (error) {
-  //     console.error(error)
-  //     res
-  //       .status(500)
-  //       .send({ message: 'Error al obtener las transacciones', error })
-  //   }
-  // },
+  // Obtener todas las transacciones de un usuario por req.body dni
   async getTransactionsByUserDni(req, res) {
     const { dni } = req.body
 
@@ -168,9 +141,14 @@ const TransController = {
         .send({ message: 'Error al obtener las transacciones', error })
     }
   },
+
+  // Obtener transacciones mensuales de un usuario por req.body dni y fecha o si no se especifica, mes actual
   async getMonthlyTransactionsByUserDni(req, res) {
-    const currentDate = new Date().toDateString()
-    const { dni } = req.body
+    const { dni, month, year } = req.body
+
+    const currentDate = new Date()
+    const queryMonth = month !== undefined ? month - 1 : currentDate.getMonth()
+    const queryYear = year || currentDate.getFullYear()
 
     try {
       const user = await User.findOne({ dni })
@@ -178,29 +156,32 @@ const TransController = {
         return res.status(404).send({ message: 'Usuario no encontrado' })
       }
 
-      const transactions = await Transaction.find({ userId: user._id })
+      const transactions = await Transaction.find({
+        userId: user._id,
+        createdAt: {
+          $gte: new Date(queryYear, queryMonth, 1),
+          $lt: new Date(queryYear, queryMonth + 1, 1),
+        },
+      })
 
-      const groupedTransactions = Object.keys(categories).map((key) => {
-        return {
-          [key]: {
-            name: categories[key].name,
-            transactions: transactions.filter((transaction) =>
-              categories[key].items.includes(transaction.category),
-            ),
-          },
-        }
-      })
-      //filtrar po currentdate, que corresponda a ese mes
-      const filteredTransactions = Object.keys(categories).map((key) => {
-        return {
-          [key]: {
-            name: categories[key].name,
-            transactions: transactions.filter((transaction) =>
-              categories[key].items.includes(transaction.category),
-            ),
-          },
-        }
-      })
+      const groupedTransactions = Object.keys(categories).reduce(
+        (result, key) => {
+          const filteredTransactions = transactions.filter((transaction) =>
+            categories[key].items.includes(transaction.category),
+          )
+
+          if (filteredTransactions.length > 0) {
+            result.push({
+              [key]: {
+                name: categories[key].name,
+                transactions: filteredTransactions,
+              },
+            })
+          }
+          return result
+        },
+        [],
+      )
 
       res.send({ categories: groupedTransactions })
     } catch (error) {
@@ -210,59 +191,6 @@ const TransController = {
         .send({ message: 'Error al obtener las transacciones', error })
     }
   },
-  // async getMonthlyTransactionsByUserDni(req, res) {
-  //   const currentDate = new Date();
-  //   const { dni } = req.body;
-
-  //   try {
-  //     const user = await User.findOne({ dni });
-  //     if (!user) {
-  //       return res.status(404).send({ message: 'Usuario no encontrado' });
-  //     }
-
-  //     // Obtener las transacciones del usuario
-  //     const transactions = await Transaction.find({ userId: user._id });
-
-  //     // Obtener el mes y año actuales
-  //     const currentMonth = currentDate.getMonth();
-  //     const currentYear = currentDate.getFullYear();
-
-  //     // Filtrar las transacciones que pertenecen al mes y año actuales
-  //     const filteredTransactions = transactions.filter(transaction => {
-  //       const transactionDate = new Date(transaction.createdAt);
-  //       return (
-  //         transactionDate.getMonth() === currentMonth &&
-  //         transactionDate.getFullYear() === currentYear
-  //       );
-  //     });
-
-  //     // Agrupar las transacciones filtradas por categorías
-  //     const groupedTransactions = Object.keys(categories).map((key) => {
-  //       return {
-  //         [key]: {
-  //           name: categories[key].name,
-  //           transactions: filteredTransactions.filter((transaction) =>
-  //             categories[key].items.includes(transaction.category),
-  //           ),
-  //         },
-  //       };
-  //     });
-
-  //     // Enviar la respuesta con las transacciones agrupadas
-  //     res.send({ categories: groupedTransactions });
-  //   } catch (error) {
-  //     console.error(error);
-  //     res.status(500).send({ message: 'Error al obtener las transacciones', error });
-  //   }
-  // }
-
-  // FILTER TRANSACTIONS BY TYPE
-
-  // GET (monthly summary of transactions)
-
-  // GET (monthly summary of transactions) BY CATEGORY
-
-  // ---
 }
 
 module.exports = TransController
