@@ -168,6 +168,93 @@ const TransController = {
         .send({ message: 'Error al obtener las transacciones', error })
     }
   },
+  async getMonthlyTransactionsByUserDni(req, res) {
+    const currentDate = new Date().toDateString()
+    const { dni } = req.body
+
+    try {
+      const user = await User.findOne({ dni })
+      if (!user) {
+        return res.status(404).send({ message: 'Usuario no encontrado' })
+      }
+
+      const transactions = await Transaction.find({ userId: user._id })
+
+      const groupedTransactions = Object.keys(categories).map((key) => {
+        return {
+          [key]: {
+            name: categories[key].name,
+            transactions: transactions.filter((transaction) =>
+              categories[key].items.includes(transaction.category),
+            ),
+          },
+        }
+      })
+      //filtrar po currentdate, que corresponda a ese mes
+      const filteredTransactions = Object.keys(categories).map((key) => {
+        return {
+          [key]: {
+            name: categories[key].name,
+            transactions: transactions.filter((transaction) =>
+              categories[key].items.includes(transaction.category),
+            ),
+          },
+        }
+      })
+
+      res.send({ categories: groupedTransactions })
+    } catch (error) {
+      console.error(error)
+      res
+        .status(500)
+        .send({ message: 'Error al obtener las transacciones', error })
+    }
+  },
+  // async getMonthlyTransactionsByUserDni(req, res) {
+  //   const currentDate = new Date();
+  //   const { dni } = req.body;
+
+  //   try {
+  //     const user = await User.findOne({ dni });
+  //     if (!user) {
+  //       return res.status(404).send({ message: 'Usuario no encontrado' });
+  //     }
+
+  //     // Obtener las transacciones del usuario
+  //     const transactions = await Transaction.find({ userId: user._id });
+
+  //     // Obtener el mes y año actuales
+  //     const currentMonth = currentDate.getMonth();
+  //     const currentYear = currentDate.getFullYear();
+
+  //     // Filtrar las transacciones que pertenecen al mes y año actuales
+  //     const filteredTransactions = transactions.filter(transaction => {
+  //       const transactionDate = new Date(transaction.createdAt);
+  //       return (
+  //         transactionDate.getMonth() === currentMonth &&
+  //         transactionDate.getFullYear() === currentYear
+  //       );
+  //     });
+
+  //     // Agrupar las transacciones filtradas por categorías
+  //     const groupedTransactions = Object.keys(categories).map((key) => {
+  //       return {
+  //         [key]: {
+  //           name: categories[key].name,
+  //           transactions: filteredTransactions.filter((transaction) =>
+  //             categories[key].items.includes(transaction.category),
+  //           ),
+  //         },
+  //       };
+  //     });
+
+  //     // Enviar la respuesta con las transacciones agrupadas
+  //     res.send({ categories: groupedTransactions });
+  //   } catch (error) {
+  //     console.error(error);
+  //     res.status(500).send({ message: 'Error al obtener las transacciones', error });
+  //   }
+  // }
 
   // FILTER TRANSACTIONS BY TYPE
 
