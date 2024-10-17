@@ -59,22 +59,23 @@ const UserController = {
   },
 
   async logout(req, res) {
-    const token = req.headers.authorization.split(' ')[1]
+    const token = req.headers.authorization // Obtener el token desde el encabezado
 
     if (!token) {
       return res.status(401).json({ message: 'No se ha proporcionado token' })
     }
 
     try {
-      const user = await User.findOne({ tokens: token }) // Busca el usuario por el token en el array de strings
+      // Busca al usuario que tiene el token
+      const user = await User.findOne({ tokens: token })
 
       if (!user) {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      // Filtra el token que se va a eliminar
+      // Elimina el token del array de tokens
       user.tokens = user.tokens.filter((t) => t !== token)
-      await user.save() // Guarda el usuario sin el token removido
+      await user.save() // Guarda los cambios en la base de datos
 
       res.status(200).json({ message: 'Logout exitoso' })
     } catch (error) {

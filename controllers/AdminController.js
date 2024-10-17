@@ -14,13 +14,10 @@ const AdminController = {
         return res.status(400).json({ message: 'Email ya registrado' })
       }
 
-      const salt = await bcrypt.genSalt(10)
-      const hashedPassword = await bcrypt.hash(password, salt)
-
       const admin = new Admin({
         name,
         email,
-        password: hashedPassword,
+        password, // Aquí ya se encripta en el schema
       })
 
       await admin.save()
@@ -63,11 +60,16 @@ const AdminController = {
         { expiresIn: '1h' },
       )
 
-      admin.token = token
+      // Asegúrate de que tokenAdmin está inicializado como un array
+      if (!admin.tokenAdmin) {
+        admin.tokenAdmin = [] // Inicializar si es undefined
+      }
+
+      // Agregar el token al array
+      admin.tokenAdmin.push(token)
       await admin.save()
 
-      console.log('Inicio de sesión exitoso')
-      res.status(200).json({
+      return res.status(200).json({
         message: 'Inicio de sesión exitoso',
         admin: {
           _id: admin._id,
@@ -77,33 +79,36 @@ const AdminController = {
       })
     } catch (error) {
       console.error('Error en el inicio de sesión:', error)
-      res
+      return res
         .status(500)
         .json({ message: 'Error al iniciar sesión', error: error.message })
     }
   },
 
   async logoutAdmin(req, res) {
-    const token = req.headers.authorization?.split(' ')[1]
+    const token = req.headers.authorization // Obtén el token del header
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided' })
     }
 
     try {
-      const admin = await Admin.findOne({ token })
+      // Verificar y decodificar el token
+      const decoded = jwt.verify(token, process.env.REACT_APP_JWT_SECRET)
+      const admin = await Admin.findById(decoded._id) // Usar findById para mayor claridad
 
-      if (!admin) {
+      if (!admin || !admin.tokenAdmin.includes(token)) {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      admin.token = null
-      await admin.save()
+      // Eliminar el token actual del array de tokens
+      admin.tokenAdmin = admin.tokenAdmin.filter((t) => t !== token)
+      await admin.save() // Guarda los cambios
 
-      res.status(200).json({ message: 'Logout exitoso' })
+      return res.status(200).json({ message: 'Logout exitoso' })
     } catch (error) {
       console.error('Error en logout:', error)
-      res
+      return res
         .status(500)
         .json({ message: 'Error al hacer logout', error: error.message })
     }
@@ -136,8 +141,20 @@ const AdminController = {
 
   async getAllUsers(req, res) {
     try {
-      const users = await User.find()
-      res.status(200).json(users)
+      const page = parseInt(req.query.page) || 1 // Página actual
+      const limit = parseInt(req.query.limit) || 10 // Número de usuarios por página
+      const skip = (page - 1) * limit // Calcular el número de documentos a omitir
+
+      const users = await User.find().skip(skip).limit(limit) // Obtener usuarios con paginación
+      const totalUsers = await User.countDocuments() // Contar el total de usuarios
+      const totalPages = Math.ceil(totalUsers / limit) // Calcular el total de páginas
+
+      res.status(200).json({
+        totalUsers,
+        totalPages,
+        currentPage: page,
+        users,
+      })
     } catch (error) {
       console.error('Error al obtener usuarios:', error)
       res.status(500).json({ message: 'Error al obtener usuarios' })
@@ -219,7 +236,6 @@ const AdminController = {
         ...transactionData,
         userId: user._id,
       })
-
       await transaction.save()
       res
         .status(201)

@@ -2,26 +2,31 @@ const jwt = require('jsonwebtoken')
 const Admin = require('../models/Admin')
 
 const adminAuth = async (req, res, next) => {
-  // Se espera que el token esté en el encabezado Authorization
-  const token = req.headers.authorization // Aquí se asume que el token llega así
+  const token = req.headers.authorization // Obtener el token directamente del header
 
+  // Verificar si se proporciona el token
   if (!token) {
-    return res.status(401).send({ message: 'No token provided' })
+    return res.status(401).json({ message: 'No token provided' })
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.REACT_APP_JWT_SECRET) // Verifica el token
-    const admin = await Admin.findById(decoded._id) // Busca al administrador por ID
+    // Verificar el token
+    const decoded = jwt.verify(token, process.env.REACT_APP_JWT_SECRET)
 
-    if (!admin) {
-      return res.status(401).send({ message: 'No autorizado' }) // Si no existe, no está autorizado
+    // Buscar el administrador utilizando el ID del token decodificado
+    const admin = await Admin.findById(decoded._id)
+
+    // Verificar si el administrador existe y si el token está en la lista de tokens
+    if (!admin || !admin.tokenAdmin.includes(token)) {
+      return res.status(401).json({ message: 'No autorizado' })
     }
 
-    req.admin = admin // Almacena el objeto admin en el request para uso posterior
-    next() // Llama a la siguiente función de middleware o ruta
+    // Almacenar el admin en la solicitud para usarlo en rutas posteriores
+    req.admin = admin
+    next() // Continuar con la siguiente función middleware o controlador
   } catch (error) {
-    console.error(error) // Registra el error para depuración
-    return res.status(401).send({ message: 'Token inválido' }) // Manejo de token inválido
+    console.error('Error en autenticación:', error)
+    return res.status(401).json({ message: 'Token inválido' })
   }
 }
 

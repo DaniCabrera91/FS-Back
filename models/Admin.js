@@ -16,9 +16,11 @@ const adminSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    token: {
-      type: String,
-    },
+    tokenAdmin: [
+      {
+        type: String,
+      },
+    ],
   },
   {
     timestamps: true,
