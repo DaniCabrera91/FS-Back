@@ -17,7 +17,7 @@ const AdminController = {
       const admin = new Admin({
         name,
         email,
-        password, // Aquí ya se encripta en el schema
+        password,
       })
 
       await admin.save()
@@ -60,12 +60,10 @@ const AdminController = {
         { expiresIn: '1h' },
       )
 
-      // Asegúrate de que tokenAdmin está inicializado como un array
       if (!admin.tokenAdmin) {
-        admin.tokenAdmin = [] // Inicializar si es undefined
+        admin.tokenAdmin = []
       }
 
-      // Agregar el token al array
       admin.tokenAdmin.push(token)
       await admin.save()
 
@@ -86,24 +84,22 @@ const AdminController = {
   },
 
   async logoutAdmin(req, res) {
-    const token = req.headers.authorization // Obtén el token del header
+    const token = req.headers.authorization
 
     if (!token) {
       return res.status(401).json({ message: 'No token provided' })
     }
 
     try {
-      // Verificar y decodificar el token
       const decoded = jwt.verify(token, process.env.REACT_APP_JWT_SECRET)
-      const admin = await Admin.findById(decoded._id) // Usar findById para mayor claridad
+      const admin = await Admin.findById(decoded._id)
 
       if (!admin || !admin.tokenAdmin.includes(token)) {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      // Eliminar el token actual del array de tokens
       admin.tokenAdmin = admin.tokenAdmin.filter((t) => t !== token)
-      await admin.save() // Guarda los cambios
+      await admin.save()
 
       return res.status(200).json({ message: 'Logout exitoso' })
     } catch (error) {
@@ -141,18 +137,21 @@ const AdminController = {
 
   async getAllUsers(req, res) {
     try {
-      const page = parseInt(req.query.page) || 1 // Página actual
-      const limit = parseInt(req.query.limit) || 10 // Número de usuarios por página
-      const skip = (page - 1) * limit // Calcular el número de documentos a omitir
+      const page = parseInt(req.query.page) || 1
+      const limit = parseInt(req.query.limit) || 10
+      const skip = (page - 1) * limit
 
-      const users = await User.find().skip(skip).limit(limit) // Obtener usuarios con paginación
-      const totalUsers = await User.countDocuments() // Contar el total de usuarios
-      const totalPages = Math.ceil(totalUsers / limit) // Calcular el total de páginas
+      // Obtener los usuarios paginados
+      const users = await User.find().skip(skip).limit(limit)
+      const totalUsers = await User.countDocuments()
+
+      // Calcular el número total de páginas
+      const totalPages = Math.ceil(totalUsers / limit)
 
       res.status(200).json({
         totalUsers,
-        totalPages,
-        currentPage: page,
+        totalPages, // Incluye el total de páginas
+        currentPage: page, // Incluye la página actual
         users,
       })
     } catch (error) {
@@ -197,16 +196,26 @@ const AdminController = {
   async deleteUser(req, res) {
     try {
       const { userId } = req.params
+
+      const deletedTransactions = await Transaction.deleteMany({ userId })
+
       const deletedUser = await User.findByIdAndDelete(userId)
+
       if (!deletedUser) {
         return res.status(404).json({ message: 'Usuario no encontrado' })
       }
-      res
-        .status(200)
-        .json({ message: 'Usuario eliminado con éxito', deletedUser })
+
+      res.status(200).json({
+        message: 'Usuario y transacciones eliminados con éxito',
+        deletedUser,
+        deletedTransactions,
+      })
     } catch (error) {
       console.error('Error al eliminar usuario:', error)
-      res.status(500).json({ message: 'Error al eliminar usuario' })
+      res.status(500).json({
+        message: 'Error al eliminar usuario y transacciones',
+        error: error.message,
+      })
     }
   },
 
