@@ -124,8 +124,7 @@ const TransController = {
         // Comprobar que la categoría es válida
         if (!categories[category]) {
           return res.status(400).send({
-            message:
-              'El usuario no cuenta con transacciones para esa categoría',
+            message: 'El usuario no cuenta transacciones para esa categoría',
           })
         }
 
