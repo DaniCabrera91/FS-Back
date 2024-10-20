@@ -57,7 +57,7 @@ const AdminController = {
       const token = jwt.sign(
         { _id: admin._id },
         process.env.REACT_APP_JWT_SECRET,
-        { expiresIn: '1h' },
+        { expiresIn: '2h' },
       )
 
       if (!admin.tokenAdmin) {
@@ -160,6 +160,33 @@ const AdminController = {
     }
   },
 
+  async getUserByDni(req, res) {
+    const { dni } = req.params
+
+    try {
+      // Buscar el usuario por DNI sin intentar poblar las transacciones
+      const user = await User.findOne({ dni })
+
+      if (!user) {
+        return res.status(404).json({ message: 'Usuario no encontrado' })
+      }
+
+      // Obtener las transacciones del usuario
+      const transactions = await Transaction.find({ userId: user._id })
+
+      res.status(200).json({
+        user,
+        transactions,
+      })
+    } catch (error) {
+      console.error('Error al buscar usuario por DNI:', error)
+      res.status(500).json({
+        message: 'Error al buscar usuario por DNI',
+        error: error.message,
+      })
+    }
+  },
+
   async updateUser(req, res) {
     const { userId } = req.params
     const updateData = req.body
@@ -254,6 +281,38 @@ const AdminController = {
       res
         .status(500)
         .json({ message: 'Error al crear transacción', error: error.message })
+    }
+  },
+
+  async updateTransaction(req, res) {
+    const { transactionId } = req.params
+    const updateData = req.body
+
+    try {
+      if (!Object.keys(updateData).length) {
+        return res.status(400).json({ message: 'No data provided for update' })
+      }
+
+      const updatedTransaction = await Transaction.findByIdAndUpdate(
+        transactionId,
+        updateData,
+        { new: true, runValidators: true },
+      )
+
+      if (!updatedTransaction) {
+        return res.status(404).json({ message: 'Transacción no encontrada' })
+      }
+
+      res.status(200).json({
+        message: 'Transacción actualizada con éxito',
+        updatedTransaction,
+      })
+    } catch (error) {
+      console.error('Error al actualizar transacción:', error)
+      res.status(500).json({
+        message: 'Error al actualizar transacción',
+        error: error.message,
+      })
     }
   },
 

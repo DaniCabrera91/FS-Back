@@ -33,7 +33,7 @@ const UserController = {
       const token = jwt.sign(
         { _id: user._id },
         process.env.REACT_APP_JWT_SECRET,
-        { expiresIn: '1h' },
+        { expiresIn: '2h' },
       )
 
       // Guardar el token como string directamente en el array de tokens
