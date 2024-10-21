@@ -86,7 +86,7 @@ const UserController = {
     }
   },
 
-  async getInitialBalance(req, res) {
+  async getUserData(req, res) {
     try {
       const { dni } = req.body
       const user = await User.findOne({ dni })
@@ -95,7 +95,7 @@ const UserController = {
         return res.status(401).json({ message: 'Usuario no encontrado' })
       }
 
-      res.send({ assets: user.assets })
+      res.send({ assets: user.assets, iban: user.iban })
     } catch (error) {
       console.error(error)
       res.status(500).send({ message: 'Error al obtener los usuarios' })

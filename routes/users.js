@@ -7,6 +7,6 @@ router.get('/getAllUsers', UserController.getAllUsers)
 router.post('/login', UserController.login)
 router.post('/logout', authentication, UserController.logout)
 
-router.post('/getInitialBalance', UserController.getInitialBalance)
+router.post('/getUserData', UserController.getUserData)
 
 module.exports = router
