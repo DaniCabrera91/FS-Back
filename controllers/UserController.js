@@ -85,6 +85,22 @@ const UserController = {
         .json({ message: 'Error al hacer logout', error: error.message })
     }
   },
+
+  async getInitialBalance(req, res) {
+    try {
+      const { dni } = req.body
+      const user = await User.findOne({ dni })
+
+      if (!user) {
+        return res.status(401).json({ message: 'Usuario no encontrado' })
+      }
+
+      res.send({ assets: user.assets })
+    } catch (error) {
+      console.error(error)
+      res.status(500).send({ message: 'Error al obtener los usuarios' })
+    }
+  },
 }
 
 module.exports = UserController
