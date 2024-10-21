@@ -273,6 +273,37 @@ const TransController = {
         .send({ message: 'Error al obtener las transacciones', error })
     }
   },
+
+  async getThreeMonthsByUserDni(req, res) {
+    const { dni } = req.body
+
+    const currentDate = new Date()
+    const queryMonth = currentDate.getMonth()
+    const queryYear = currentDate.getFullYear()
+    const threeMonthsAgo = new Date(queryYear, queryMonth - 3, 1)
+
+    try {
+      const user = await User.findOne({ dni })
+      if (!user) {
+        return res.status(404).send({ message: 'Usuario no encontrado' })
+      }
+
+      const transactions = await Transaction.find({
+        userId: user._id,
+        createdAt: {
+          $gte: threeMonthsAgo,
+          $lt: new Date(queryYear, queryMonth + 1, 1),
+        },
+      }).sort({ createdAt: -1 })
+
+      res.send({ transactions })
+    } catch (error) {
+      console.error(error)
+      res
+        .status(500)
+        .send({ message: 'Error al obtener las transacciones', error })
+    }
+  },
 }
 
 module.exports = TransController

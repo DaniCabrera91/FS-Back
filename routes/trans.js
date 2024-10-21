@@ -12,10 +12,13 @@ router.get('/getAllCategories', TransController.getAllCategories)
 //pasar por body dni, categoria opcional
 router.post('/getByUserDni', TransController.getTransactionsByUserDni)
 
-// pasarpor body dni, categoria, mes y año opcional
+// pasar por body dni, categoria, mes y año opcional
 router.post(
   '/getMonthlyByUserDni',
   TransController.getMonthlyTransactionsByUserDni,
 )
+
+// pasar por body dni
+router.post('/getThreeMonthsByUserDni', TransController.getThreeMonthsByUserDni)
 
 module.exports = router
