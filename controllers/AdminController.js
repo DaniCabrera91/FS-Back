@@ -141,7 +141,6 @@ const AdminController = {
       const limit = parseInt(req.query.limit) || 10
       const skip = (page - 1) * limit
 
-      // Obtener los usuarios paginados
       const users = await User.find().skip(skip).limit(limit)
       const totalUsers = await User.countDocuments()
 
@@ -150,8 +149,8 @@ const AdminController = {
 
       res.status(200).json({
         totalUsers,
-        totalPages, // Incluye el total de páginas
-        currentPage: page, // Incluye la página actual
+        totalPages,
+        currentPage: page,
         users,
       })
     } catch (error) {
@@ -164,14 +163,12 @@ const AdminController = {
     const { dni } = req.params
 
     try {
-      // Buscar el usuario por DNI sin intentar poblar las transacciones
       const user = await User.findOne({ dni })
 
       if (!user) {
         return res.status(404).json({ message: 'Usuario no encontrado' })
       }
 
-      // Obtener las transacciones del usuario
       const transactions = await Transaction.find({ userId: user._id })
 
       res.status(200).json({

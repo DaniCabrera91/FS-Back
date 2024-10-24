@@ -6,8 +6,7 @@ const Transaction = require('../models/Transaction')
 const categories = require('../utils/categories')
 
 const TransController = {
-  // ---
-  // GET ALL THE TRANSACTIONS
+
   async getAllTransactions(req, res) {
     try {
       const transactions = await Transaction.find().populate('userId', 'name')
@@ -19,7 +18,6 @@ const TransController = {
     }
   },
 
-  // CREATE TRANSACTION
   async createTransaction(req, res) {
     try {
       const { dni, ...transactionData } = req.body
@@ -42,7 +40,6 @@ const TransController = {
     }
   },
 
-  // GET TRANSACTION BY ID
   async getTransById(req, res) {
     try {
       const transaction = await Transaction.findById(req.params._id)
@@ -56,7 +53,6 @@ const TransController = {
     }
   },
 
-  // UPDATE TRANSACTION BY ID
   async updateTransById(req, res) {
     try {
       const transaction = await Transaction.findByIdAndUpdate(
@@ -75,7 +71,6 @@ const TransController = {
     }
   },
 
-  // DELETE TRANSACTION BY ID
   async deleteTransById(req, res) {
     try {
       const transaction = await Transaction.findByIdAndDelete(req.params._id)
@@ -91,13 +86,10 @@ const TransController = {
     }
   },
 
-  // GET ALL CATEGORIES
   async getAllCategories(req, res) {
     try {
-      // Encuentra todas las transacciones y extrae las categorías
       const transactions = await Transaction.find().select('category')
 
-      // Se asegura que las categorías no se repitan
       const categories = [
         ...new Set(transactions.map((transaction) => transaction.category)),
       ]
@@ -121,7 +113,6 @@ const TransController = {
       }
 
       if (category) {
-        // Comprobar que la categoría es válida
         if (!categories[category]) {
           return res.status(400).send({
             message: 'El usuario no cuenta transacciones para esa categoría',
@@ -131,9 +122,8 @@ const TransController = {
         const filteredTransactions = await Transaction.find({
           userId: user._id,
           category: { $in: categories[category].items },
-        }).sort({ createdAt: -1 }) // Ordenar de más reciente a más antiguo
+        }).sort({ createdAt: -1 })
 
-        // Comprobar si hay transacciones en la categoría especificada
         if (filteredTransactions.length === 0) {
           return res.status(404).send({
             message:
@@ -153,10 +143,9 @@ const TransController = {
         })
       }
 
-      // Si no hay categoría, obtener todas las transacciones
       const transactions = await Transaction.find({ userId: user._id }).sort({
         createdAt: -1,
-      }) // También de más reciente a más antigua
+      })
 
       const groupedTransactions = Object.keys(categories).reduce(
         (result, key) => {

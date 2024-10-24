@@ -37,10 +37,6 @@ const importUsers = async () => {
       }
     }
 
-    console.log(
-      'Usuarios importados correctamente:',
-      insertedUsers.map((user) => ({ dni: user.dni, id: user._id })),
-    )
 
     return { insertedUsers, dniToUserIdMap }
   } catch (error) {
@@ -57,13 +53,11 @@ const importTransactions = async (dniToUserIdMap) => {
     const transactionsToInsert = []
 
     for (const transaction of transactions) {
-      console.log('Verificando transacción:', transaction)
 
       const userId = dniToUserIdMap.get(transaction.dni)
 
       if (userId) {
         transaction.userId = userId
-        // Asigna el timestamp a createdAt
         if (transaction.timestamp) {
           transaction.createdAt = new Date(transaction.timestamp)
         }
@@ -75,16 +69,13 @@ const importTransactions = async (dniToUserIdMap) => {
       }
 
       delete transaction.dni
-      delete transaction.timestamp // Eliminamos el timestamp original del JSON, ya que ahora lo usamos como createdAt
+      delete transaction.timestamp
       transactionsToInsert.push(transaction)
     }
 
     if (transactionsToInsert.length > 0) {
       await Transaction.insertMany(transactionsToInsert)
-      console.log(
-        'Transacciones importadas correctamente:',
-        transactionsToInsert.length,
-      )
+
     } else {
       console.warn(
         'No se importaron transacciones, ya que ninguna tenía un usuario asociado.',

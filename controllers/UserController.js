@@ -36,9 +36,8 @@ const UserController = {
         { expiresIn: '2h' },
       )
 
-      // Guardar el token como string directamente en el array de tokens
-      user.tokens = user.tokens.concat(token) // Añadir el token como string
-      await user.save() // Guarda el usuario con el nuevo token
+      user.tokens = user.tokens.concat(token)
+      await user.save()
 
       res.status(200).json({
         message: 'Inicio de sesión exitoso',
@@ -59,23 +58,21 @@ const UserController = {
   },
 
   async logout(req, res) {
-    const token = req.headers.authorization // Obtener el token desde el encabezado
+    const token = req.headers.authorization
 
     if (!token) {
       return res.status(401).json({ message: 'No se ha proporcionado token' })
     }
 
     try {
-      // Busca al usuario que tiene el token
       const user = await User.findOne({ tokens: token })
 
       if (!user) {
         return res.status(401).json({ message: 'Token inválido' })
       }
 
-      // Elimina el token del array de tokens
       user.tokens = user.tokens.filter((t) => t !== token)
-      await user.save() // Guarda los cambios en la base de datos
+      await user.save()
 
       res.status(200).json({ message: 'Logout exitoso' })
     } catch (error) {

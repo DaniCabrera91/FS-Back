@@ -15,7 +15,7 @@ const TestController = {
 
   async getAllTransactions(req, res) {
     try {
-      const transactions = await Transaction.find().populate('userId', 'name') // Obtiene todas las transacciones
+      const transactions = await Transaction.find().populate('userId', 'name')
       res.send(transactions)
     } catch (error) {
       console.error(error)
